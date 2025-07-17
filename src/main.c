@@ -23,11 +23,17 @@ int main(int argc, char *argv[]) {
         fread(buffer, 1, 2, database_file);
         unsigned short page_size = (buffer[1] | (buffer[0] << 8));
 
+        fseek(database_file,103,SEEK_SET);
+        unsigned char table_buffer[2];
+        fread(table_buffer, 1, 2, database_file);
+        unsigned short number_tables = (table_buffer[1] | (table_buffer[0] << 8));
+
         // You can use print statements as follows for debugging, they'll be visible when running tests.
         fprintf(stderr, "Logs from your program will appear here!\n");
 
         // Uncomment this to pass the first stage
         printf("database page size: %u\n", page_size);
+        printf("number of tables: %u\n",number_tables);
 
         fclose(database_file);
     } else {
