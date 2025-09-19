@@ -57,7 +57,33 @@ int main(int argc, char *argv[]) {
 
         fclose(database_file);
 
-    } else {
+    }else if(strcmp(command, ".tables") == 0){
+        FILE *database_file = fopen(database_file_path, "rb");
+        if (!database_file) {
+            fprintf(stderr, "Failed to open the database file\n");
+            return 1;
+        }
+        fseek(database_file,103,SEEK_SET);
+        unsigned char table_buffer[2];
+        fread(table_buffer, 1, 2, database_file);
+        unsigned short number_tables = (table_buffer[1] | (table_buffer[0] << 8));
+
+                fseek(database_file,108,SEEK_SET);
+        unsigned short cell_offsets[number_tables];
+        fread(cell_offsets,2,number_tables,database_file);
+        unsigned int absolute_offset = 0;
+
+        for(int i=0;i<number_tables;i++){
+            cell_offsets[i] = (cell_offsets[i]>>8) | (cell_offsets[i]<< 8);
+            // printf("\\x%04X\n",cell_offsets[i]);
+        }
+        for(int i=0;i<number_tables;i++){
+            parseCell(database_file,cell_offsets[i]);
+        }
+
+        fclose(database_file);
+        
+    }else {
         fprintf(stderr, "Unknown command %s\n", command);
         return 1;
     }
