@@ -104,7 +104,6 @@ int main(int argc, char *argv[]) {
 
         for(int i=0;i<number_tables;i++){
             cell_offsets[i] = (cell_offsets[i]>>8) | (cell_offsets[i]<< 8);
-            // printf("\\x%04X\n",cell_offsets[i]);
         }
         for(int i=0;i<number_tables;i++){
             parseCell(database_file,cell_offsets[i]);
@@ -112,7 +111,7 @@ int main(int argc, char *argv[]) {
 
         fclose(database_file);
         
-    } else if(strcmp(command, "SELECT COUNT(*) FROM apple") == 0){
+    } else if(strcmp(command, "SELECT COUNT(*) FROM ") >= 0){
         char * words[MAX_WORDS];
         int words_no = split(command,words);
         if(words_no<=0){
