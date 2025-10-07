@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
 
         fclose(database_file);
         
-    } else if(strcmp(command, "SELECT COUNT(*) FROM apples") == 0){
+    } else if(strcmp(command, "SELECT COUNT(*) FROM apple") == 0){
         char * words[MAX_WORDS];
         int words_no = split(command,words);
         if(words_no<=0){
