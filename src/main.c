@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
         int words_no = split(command,words);
         if(words_no<=0){
             printf("Trouble splitting the words: debug!!\n");
-            return 1;
+            return -1;
         }
         char* table_name = words[words_no-1];
 
@@ -124,7 +124,7 @@ int main(int argc, char *argv[]) {
 
         if (!database_file) {
             fprintf(stderr, "Failed to open the database file\n");
-            return 1;
+            return -1;
         }
 
         //get page size for pages in db
@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {
     }
     else {
         fprintf(stderr, "Unknown command %s\n", command);
-        return 1;
+        return -1;
     }
 
     return 0;
