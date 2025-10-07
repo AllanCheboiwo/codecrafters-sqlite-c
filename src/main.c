@@ -1,7 +1,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <ctype.h>
 #define QUERY_SIZE 100
 #define MAX_WORDS 100
 #define MAX_WORD_LEN 10
@@ -11,6 +11,7 @@ static int fp = 0;
 
 int split(const char* string,char*words[]);
 int table_root(FILE *file,unsigned short cell_offset,char *table);
+void strtolower(char *str);
 
 char* pop()
 {
@@ -111,77 +112,79 @@ int main(int argc, char *argv[]) {
 
         fclose(database_file);
         
-    } else if(strcmp(command, "SELECT COUNT(*) FROM apples") == 0){
+    } else {
         char * words[MAX_WORDS];
         int words_no = split(command,words);
         if(words_no<=0){
             printf("Trouble splitting the words: debug!!\n");
             return -1;
         }
-        char* table_name = words[words_no-1];
 
-        FILE *database_file = fopen(database_file_path,"rb");
-
-        if (!database_file) {
-            fprintf(stderr, "Failed to open the database file\n");
-            return -1;
-        }
-
-        //get page size for pages in db
-        fseek(database_file, 16, SEEK_SET);
-        unsigned char buffer[2];
-        fread(buffer, 1, 2, database_file);
-        unsigned short page_size = (buffer[1] | (buffer[0] << 8));
-
-        //get number of tables in the db
-        fseek(database_file,103,SEEK_SET);
-        unsigned char table_buffer[2];
-        fread(table_buffer, 1, 2, database_file);
-        unsigned short number_tables = (table_buffer[1] | (table_buffer[0] << 8));
-
-        //getting cell offsets
-        fseek(database_file,108,SEEK_SET);
-        unsigned short cell_offsets[number_tables];
-        fread(cell_offsets,2,number_tables,database_file);
-        unsigned int absolute_offset = 0;
-
-        for(int i=0;i<number_tables;i++){
-            cell_offsets[i] = (cell_offsets[i]>>8) | (cell_offsets[i]<< 8);
-          
-        }
-
-        //looking for apple in the schema table
-        int root_page;
-
-        for(int i=0;i<number_tables;i++){
-            if((root_page=table_root(database_file,cell_offsets[i],table_name))>0)
-                break;
-        }
-        if(root_page){
-
-            fseek(database_file,page_size*(root_page-1),SEEK_SET);
-            unsigned char page_type;
-            fseek(database_file,3,SEEK_CUR);
-            unsigned char record_buffer[2];
-            fread(record_buffer, 1, 2, database_file);
-            unsigned short number_records = (record_buffer[1] | (record_buffer[0] << 8));
-            printf("%u\n",number_records);
+        strtolower(words[0]);
         
+        if(strcmp(words[0],"select")==0){
+            char* table_name = words[words_no-1];
+
+            FILE *database_file = fopen(database_file_path,"rb");
+
+            if (!database_file) {
+                fprintf(stderr, "Failed to open the database file\n");
+                return -1;
+            }
+
+            //get page size for pages in db
+            fseek(database_file, 16, SEEK_SET);
+            unsigned char buffer[2];
+            fread(buffer, 1, 2, database_file);
+            unsigned short page_size = (buffer[1] | (buffer[0] << 8));
+
+            //get number of tables in the db
+            fseek(database_file,103,SEEK_SET);
+            unsigned char table_buffer[2];
+            fread(table_buffer, 1, 2, database_file);
+            unsigned short number_tables = (table_buffer[1] | (table_buffer[0] << 8));
+
+            //getting cell offsets
+            fseek(database_file,108,SEEK_SET);
+            unsigned short cell_offsets[number_tables];
+            fread(cell_offsets,2,number_tables,database_file);
+            unsigned int absolute_offset = 0;
+
+            for(int i=0;i<number_tables;i++){
+                cell_offsets[i] = (cell_offsets[i]>>8) | (cell_offsets[i]<< 8);
+            
+            }
+
+            //looking for apple in the schema table
+            int root_page;
+
+            for(int i=0;i<number_tables;i++){
+                if((root_page=table_root(database_file,cell_offsets[i],table_name))>0)
+                    break;
+            }
+            if(root_page){
+
+                fseek(database_file,page_size*(root_page-1),SEEK_SET);
+                unsigned char page_type;
+                fseek(database_file,3,SEEK_CUR);
+                unsigned char record_buffer[2];
+                fread(record_buffer, 1, 2, database_file);
+                unsigned short number_records = (record_buffer[1] | (record_buffer[0] << 8));
+                printf("%u\n",number_records);
+            
+            }
+            else{
+                printf("No such table found!!\n");
+                return -1;
+            }
+            fclose(database_file);
+
         }
         else{
-            printf("No such table found!!\n");
+            fprintf(stderr, "Unknown command %s\n", command);
             return -1;
         }
 
-        
-        fclose(database_file);
-
-
-
-    }
-    else {
-        fprintf(stderr, "Unknown command %s\n", command);
-        return -1;
     }
 
     return 0;
@@ -330,4 +333,10 @@ int split(const char* string, char* words[])
     }
     
     return word_count;
+}
+
+void strtolower(char *str) {
+    for (int i = 0; str[i]; i++) {
+        str[i] = tolower(str[i]);
+    }
 }
